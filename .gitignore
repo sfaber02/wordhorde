@@ -1,2 +1,4 @@
 data/
 dictionary.json
+enriched_dictionary.json
+*.gz

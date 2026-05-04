@@ -109,40 +109,59 @@ print(f"POS extracted: {len(pos_data)} words")
 for pos, count in sorted(pos_count.items(), key=lambda x: -x[1]):
     print(f"  {pos}: {count}")
 
-# --- Build enriched dictionary ---
-# Format: { word: { d: definition, e: [emotions], s: syllables, p: pos } }
-# Only include fields that have data, to keep size down.
+# --- Build split output ---
+# words.json: { word: { e: [emotions], s: syllables, p: pos } } — no definitions
+# definitions.json: { word: definition_string }
 
-enriched = {}
+import gzip
+
+words_data = {}
+defs_data = {}
+
 for word, defn in orig_dict.items():
-    entry = {"d": defn}
-
+    entry = {}
     w_lower = word.lower()
 
     if w_lower in emotions_data:
         entry["e"] = emotions_data[w_lower]
-
     if w_lower in syllable_data:
         entry["s"] = syllable_data[w_lower]
-
     if word in pos_data:
         entry["p"] = pos_data[word]
 
-    enriched[word] = entry
+    words_data[word] = entry
+    defs_data[word] = defn
 
 # Stats
-has_emotion = sum(1 for e in enriched.values() if "e" in e)
-has_syllable = sum(1 for e in enriched.values() if "s" in e)
-has_pos = sum(1 for e in enriched.values() if "p" in e)
+has_emotion = sum(1 for e in words_data.values() if "e" in e)
+has_syllable = sum(1 for e in words_data.values() if "s" in e)
+has_pos = sum(1 for e in words_data.values() if "p" in e)
 
-print(f"\nEnriched dictionary: {len(enriched)} words")
+print(f"\nWords index: {len(words_data)} words")
 print(f"  With emotions: {has_emotion}")
 print(f"  With syllables: {has_syllable}")
 print(f"  With POS: {has_pos}")
 
-# Write output
-with open("enriched_dictionary.json", "w") as f:
-    json.dump(enriched, f, separators=(',', ':'))
+# Write words.json (small, loads first)
+words_json = json.dumps(words_data, separators=(',', ':'))
+with open("words.json", "w") as f:
+    f.write(words_json)
+print(f"\nwords.json: {len(words_json) / 1024 / 1024:.1f} MB")
 
-size_mb = len(json.dumps(enriched, separators=(',', ':'))) / 1024 / 1024
-print(f"\nOutput: enriched_dictionary.json ({size_mb:.1f} MB)")
+# Write words.json.gz
+with gzip.open("words.json.gz", "wb", compresslevel=9) as f:
+    f.write(words_json.encode())
+import os
+gz_size = os.path.getsize("words.json.gz")
+print(f"words.json.gz: {gz_size / 1024 / 1024:.1f} MB")
+
+# Write definitions.json.gz (lazy-loaded)
+defs_json = json.dumps(defs_data, separators=(',', ':'))
+with open("definitions.json", "w") as f:
+    f.write(defs_json)
+print(f"\ndefinitions.json: {len(defs_json) / 1024 / 1024:.1f} MB")
+
+with gzip.open("definitions.json.gz", "wb", compresslevel=9) as f:
+    f.write(defs_json.encode())
+gz_size = os.path.getsize("definitions.json.gz")
+print(f"definitions.json.gz: {gz_size / 1024 / 1024:.1f} MB")

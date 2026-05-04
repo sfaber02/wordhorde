@@ -590,7 +590,8 @@ function shuffle(arr, rng) {
 }
 
 // --- Globals ---
-let DICT = {};
+let DICT = {};  // word -> {e, s, p} metadata
+let DEFS = {};  // word -> definition string (lazy-loaded)
 let swarmCount = 0;
 let menuOpen = false;
 let activeFilters = { emotions: new Set(), pos: null, syllables: null, sentiment: null };
@@ -801,7 +802,7 @@ document.getElementById('swarm').addEventListener('click', (e) => {
 
   tipWord.textContent = word;
   tipPos.textContent = entry.p || '';
-  tipDef.textContent = entry.d || 'No definition available.';
+  tipDef.textContent = DEFS[word] || (Object.keys(DEFS).length ? 'No definition available.' : 'Loading definitions...');
 
   const meta = [];
   if (entry.s) meta.push(entry.s + ' syl');
@@ -946,12 +947,19 @@ document.addEventListener('keydown', (e) => {
 });
 
 // --- Load dictionary and start ---
-fetch('enriched_dictionary.json')
+// 1. Load words metadata first (small, ~2MB) — renders swarm immediately
+fetch('words.json')
   .then(r => r.json())
   .then(data => {
     DICT = data;
     document.getElementById('loading').style.display = 'none';
     buildSwarm();
+
+    // 2. Lazy-load definitions in background (large, only needed on click)
+    fetch('definitions.json')
+      .then(r => r.json())
+      .then(defs => { DEFS = defs; })
+      .catch(() => {});
   })
   .catch(err => {
     document.getElementById('loading').textContent = 'Failed to load dictionary: ' + err.message;
