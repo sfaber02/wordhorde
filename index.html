@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='8' fill='%23111'/><text x='4' y='18' font-family='Georgia,serif' font-size='11' fill='%23e06c75'>word</text><text x='28' y='18' font-family='Georgia,serif' font-size='7' fill='%2398c379'>the</text><text x='8' y='30' font-family='Georgia,serif' font-size='16' font-weight='bold' fill='%2361afef'>horde</text><text x='3' y='42' font-family='Georgia,serif' font-size='8' fill='%23c678dd'>dream</text><text x='30' y='41' font-family='Georgia,serif' font-size='6' fill='%23d19a66'>sky</text><text x='42' y='42' font-family='Georgia,serif' font-size='9' fill='%2356b6c2'>joy</text><text x='6' y='52' font-family='Georgia,serif' font-size='10' fill='%23e5c07b'>fire</text><text x='32' y='53' font-family='Georgia,serif' font-size='7' fill='%23e06c75'>bloom</text><text x='10' y='61' font-family='Georgia,serif' font-size='6' fill='%2398c379'>vast</text><text x='28' y='61' font-family='Georgia,serif' font-size='8' fill='%2361afef'>light</text></svg>">
 <title>Word Horde</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -863,9 +864,6 @@ document.addEventListener('keydown', (e) => {
     return;
   }
 
-  // Don't process other keys when info is open
-  if (infoOpen) return;
-
   // F or / : toggle menu
   if (key === 'f' || key === 'F' || key === '/') {
     e.preventDefault();
@@ -899,7 +897,13 @@ document.addEventListener('keydown', (e) => {
   }
 
   // When menu is closed
+  if (key === 'c' || key === 'C') {
+    if (infoOpen) toggleInfo();
+    clearFilters();
+    return;
+  }
   if (key === 'r' || key === 'R') {
+    if (infoOpen) toggleInfo();
     swarmCount++;
     hideTooltip();
     buildSwarm();
