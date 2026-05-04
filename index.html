@@ -405,7 +405,7 @@
     <div class="info-section">
       <div class="info-section-title">filters</div>
       <div class="info-text">
-        Press <span class="info-key" style="display:inline-flex;vertical-align:middle;height:18px;min-width:18px;font-size:10px">f</span> to open the filter menu. Filter words by mood (joy, sadness, anger...), part of speech, syllable count, or sentiment. Filters can be combined. Each option has a hotkey.
+        Press <span class="info-key" style="display:inline-flex;vertical-align:middle;height:18px;min-width:18px;font-size:10px">f</span> to open the filter menu. Filter words by mood (joy, sadness, anger...), part of speech, syllable count, or sentiment. Filters can be combined. Each option has a hotkey. Press <span class="info-key" style="display:inline-flex;vertical-align:middle;height:18px;min-width:18px;font-size:10px">m</span> to toggle between AND mode (words match all selected moods) and OR mode (words match any selected mood).
       </div>
     </div>
 
@@ -425,6 +425,14 @@
 <div id="menu-overlay" onclick="if(event.target===this)toggleMenu()">
   <div id="menu">
     <h2>filters</h2>
+
+    <div class="menu-section">
+      <div class="menu-section-title">filter mode</div>
+      <div class="menu-row" id="mode-toggle" onclick="toggleFilterMode()">
+        <span class="menu-key">m</span>
+        <span class="menu-label" id="mode-label">AND — words match all moods</span>
+      </div>
+    </div>
 
     <div class="menu-section">
       <div class="menu-section-title">mood</div>
@@ -531,6 +539,7 @@
       <span class="menu-footer-hint">
         <span class="menu-key">esc</span> close
         <span class="menu-key">c</span> clear all
+        <span class="menu-key">m</span> and/or
         <span class="menu-key">r</span> regenerate
       </span>
       <span class="menu-footer-count" id="filter-count"></span>
@@ -585,6 +594,7 @@ let DICT = {};
 let swarmCount = 0;
 let menuOpen = false;
 let activeFilters = { emotions: new Set(), pos: null, syllables: null, sentiment: null };
+let filterMode = 'and'; // 'and' or 'or'
 
 // Key -> { filter, value } mapping
 const KEY_MAP = {
@@ -622,8 +632,16 @@ function getFilteredWords() {
 
     if (activeFilters.emotions.size > 0) {
       if (!entry.e) return false;
-      for (const emo of activeFilters.emotions) {
-        if (!entry.e.includes(emo)) return false;
+      if (filterMode === 'and') {
+        for (const emo of activeFilters.emotions) {
+          if (!entry.e.includes(emo)) return false;
+        }
+      } else {
+        let match = false;
+        for (const emo of activeFilters.emotions) {
+          if (entry.e.includes(emo)) { match = true; break; }
+        }
+        if (!match) return false;
       }
     }
 
@@ -679,6 +697,17 @@ function clearFilters() {
   updateActiveFiltersDisplay();
   swarmCount++;
   buildSwarm();
+}
+
+function toggleFilterMode() {
+  filterMode = filterMode === 'and' ? 'or' : 'and';
+  document.getElementById('mode-label').textContent =
+    filterMode === 'and' ? 'AND — words match all moods' : 'OR — words match any mood';
+  if (activeFilters.emotions.size > 1) {
+    swarmCount++;
+    buildSwarm();
+  }
+  updateFilterCount();
 }
 
 function isRowActive(filterType, value) {
@@ -873,6 +902,12 @@ document.addEventListener('keydown', (e) => {
 
   // When menu is open, handle filter keys
   if (menuOpen) {
+    // m = toggle filter mode
+    if (key === 'm' || key === 'M') {
+      toggleFilterMode();
+      return;
+    }
+
     // c = clear all
     if (key === 'c' || key === 'C') {
       clearFilters();
