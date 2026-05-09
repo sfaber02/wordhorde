@@ -52,6 +52,9 @@
   #tooltip .tip-word { font-weight: bold; font-size: 17px; margin-bottom: 6px; color: #fff; }
   #tooltip .tip-pos { color: #999; font-size: 13px; font-style: italic; margin-bottom: 4px; }
   #tooltip .tip-def { color: #ccc; }
+  #tooltip.is-quote .tip-def { color: #bbb; font-style: italic; }
+  #tooltip.is-quote .tip-def::before { content: '\201C'; }
+  #tooltip.is-quote .tip-def::after { content: '\201D'; }
   #tooltip .tip-meta { margin-top: 8px; font-size: 12px; color: #777; }
 
   #date-label { display: none; }
@@ -90,8 +93,8 @@
     font-size: 11px;
   }
 
-  /* Info overlay */
-  #info-overlay {
+  /* Shared overlay + panel styles */
+  .overlay {
     display: none;
     position: fixed;
     inset: 0;
@@ -101,32 +104,33 @@
     justify-content: center;
     align-items: center;
   }
-  #info-overlay.visible { display: flex; }
+  .overlay.visible { display: flex; }
 
-  #info-panel {
+  .panel {
     background: #1a1a1a;
     border: 1px solid #333;
     border-radius: 12px;
-    padding: 28px 36px;
-    max-width: 520px;
-    width: 90vw;
+    padding: 24px 32px;
+    min-width: 420px;
+    max-width: 90vw;
     max-height: 80vh;
     overflow-y: auto;
     font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
     box-shadow: 0 20px 60px rgba(0,0,0,0.8);
   }
-  #info-panel h2 {
+  .panel h2 {
     color: #666;
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 2px;
-    margin-bottom: 18px;
+    margin-bottom: 16px;
     font-weight: 400;
     text-align: center;
   }
-  .info-section {
-    margin-bottom: 14px;
-  }
+
+  /* Info panel extras */
+  #info-panel { padding: 28px 36px; max-width: 520px; }
+  .info-section { margin-bottom: 14px; }
   .info-section-title {
     color: #555;
     font-size: 10px;
@@ -134,12 +138,7 @@
     letter-spacing: 1.5px;
     margin-bottom: 6px;
   }
-  .info-row {
-    display: flex;
-    align-items: center;
-    padding: 4px 8px;
-    gap: 10px;
-  }
+  .info-row { display: flex; align-items: center; padding: 4px 8px; gap: 10px; }
   .info-key {
     display: inline-flex;
     align-items: center;
@@ -155,33 +154,18 @@
     font-family: inherit;
     flex-shrink: 0;
   }
-  .info-desc {
-    color: #777;
-    font-size: 13px;
-  }
-  .info-text {
-    color: #666;
-    font-size: 13px;
-    line-height: 1.6;
-    padding: 4px 8px;
-  }
+  .info-desc { color: #777; font-size: 13px; }
+  .info-text { color: #666; font-size: 13px; line-height: 1.6; padding: 4px 8px; }
   .info-footer {
     border-top: 1px solid #2a2a2a;
     padding-top: 12px;
     margin-top: 8px;
     text-align: center;
   }
-  .info-footer-hint {
-    color: #444;
-    font-size: 11px;
-  }
+  .info-footer-hint { color: #444; font-size: 11px; }
   .info-footer-hint .info-key {
-    display: inline-flex;
-    vertical-align: middle;
-    height: 18px;
-    min-width: 18px;
-    font-size: 10px;
-    margin: 0 2px;
+    display: inline-flex; vertical-align: middle;
+    height: 18px; min-width: 18px; font-size: 10px; margin: 0 2px;
   }
 
   /* Mobile menu link */
@@ -202,11 +186,9 @@
     backdrop-filter: blur(6px);
   }
   #mobile-menu-link:hover { color: #aaa; border-color: #555; }
-  @media (pointer: coarse) {
-    #mobile-menu-link { display: block; }
-  }
+  @media (pointer: coarse) { #mobile-menu-link { display: block; } }
 
-  /* Active filters indicator */
+  /* Active filters/dicts bar */
   #active-filters {
     position: fixed;
     bottom: 10px;
@@ -232,45 +214,8 @@
     background: rgba(0,0,0,0.5);
   }
 
-  /* Overlay menu */
-  #menu-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.75);
-    z-index: 2000;
-    backdrop-filter: blur(8px);
-    justify-content: center;
-    align-items: center;
-  }
-  #menu-overlay.visible { display: flex; }
-
-  #menu {
-    background: #1a1a1a;
-    border: 1px solid #333;
-    border-radius: 12px;
-    padding: 24px 32px;
-    min-width: 420px;
-    max-width: 90vw;
-    max-height: 80vh;
-    overflow-y: auto;
-    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.8);
-  }
-
-  #menu h2 {
-    color: #666;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    margin-bottom: 16px;
-    font-weight: 400;
-    text-align: center;
-  }
-
-  .menu-section {
-    margin-bottom: 16px;
-  }
+  /* Menu rows (shared by filter menu and dict menu) */
+  .menu-section { margin-bottom: 16px; }
   .menu-section-title {
     color: #555;
     font-size: 10px;
@@ -279,7 +224,6 @@
     margin-bottom: 6px;
     padding-left: 2px;
   }
-
   .menu-row {
     display: flex;
     align-items: center;
@@ -291,7 +235,6 @@
   }
   .menu-row:hover { background: #252525; }
   .menu-row.active { background: #252525; }
-
   .menu-key {
     display: inline-flex;
     align-items: center;
@@ -307,28 +250,12 @@
     font-family: inherit;
     flex-shrink: 0;
   }
-  .menu-row.active .menu-key {
-    background: #fff;
-    color: #111;
-    border-color: #fff;
-  }
-
-  .menu-label {
-    color: #888;
-    font-size: 13px;
-    flex: 1;
-  }
+  .menu-row.active .menu-key { background: #fff; color: #111; border-color: #fff; }
+  .menu-label { color: #888; font-size: 13px; flex: 1; }
   .menu-row.active .menu-label { color: #eee; }
   .menu-row:hover .menu-label { color: #bbb; }
-
-  .menu-indicator {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
+  .menu-indicator { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
   .menu-row.active .menu-indicator { background: #5bf; }
-
   .menu-footer {
     border-top: 1px solid #2a2a2a;
     padding-top: 12px;
@@ -337,25 +264,24 @@
     justify-content: space-between;
     align-items: center;
   }
-  .menu-footer-hint {
-    color: #444;
-    font-size: 11px;
-  }
-  .menu-footer-count {
-    color: #555;
-    font-size: 12px;
-  }
+  .menu-footer-hint { color: #444; font-size: 11px; }
+  .menu-footer-count { color: #555; font-size: 12px; }
   .menu-footer-hint .menu-key {
-    display: inline-flex;
-    vertical-align: middle;
-    height: 18px;
-    min-width: 18px;
-    font-size: 10px;
-    margin: 0 2px;
+    display: inline-flex; vertical-align: middle;
+    height: 18px; min-width: 18px; font-size: 10px; margin: 0 2px;
   }
 
+  /* Dict menu dot */
+  .dict-dot {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .dict-sub { color: #555; font-size: 11px; margin-left: 4px; }
+
   @media (max-width: 500px) {
-    #menu { min-width: 0; width: 95vw; padding: 16px 18px; }
+    .panel { min-width: 0; width: 95vw; padding: 16px 18px; }
   }
 </style>
 </head>
@@ -374,49 +300,44 @@
 <div id="active-filters"></div>
 <div id="mobile-menu-link" onclick="toggleMenu()">filters</div>
 
-<div id="info-overlay" onclick="if(event.target===this)toggleInfo()">
-  <div id="info-panel">
+<!-- Info overlay -->
+<div id="info-overlay" class="overlay" onclick="if(event.target===this)toggleInfo()">
+  <div id="info-panel" class="panel">
     <h2>word horde</h2>
 
     <div class="info-text">
-      1,000 random words from a 100k+ dictionary, regenerated daily. A writing tool for getting random words in your head.
+      1,000 random words regenerated daily. Click any word to see its definition or a quote from the source author.
     </div>
 
     <div class="info-section">
       <div class="info-section-title">controls</div>
-      <div class="info-row">
-        <span class="info-key">f</span>
-        <span class="info-desc">open filter menu</span>
-      </div>
-      <div class="info-row">
-        <span class="info-key">r</span>
-        <span class="info-desc">regenerate word set</span>
-      </div>
-      <div class="info-row">
-        <span class="info-key">a</span>
-        <span class="info-desc">toggle this panel</span>
-      </div>
-      <div class="info-row">
-        <span class="info-key">esc</span>
-        <span class="info-desc">close any panel</span>
-      </div>
-      <div class="info-row">
-        <span class="info-key">click</span>
-        <span class="info-desc">show word definition</span>
+      <div class="info-row"><span class="info-key">d</span><span class="info-desc">choose dictionaries</span></div>
+      <div class="info-row"><span class="info-key">f</span><span class="info-desc">open filter menu</span></div>
+      <div class="info-row"><span class="info-key">r</span><span class="info-desc">regenerate word set</span></div>
+      <div class="info-row"><span class="info-key">c</span><span class="info-desc">clear all filters</span></div>
+      <div class="info-row"><span class="info-key">a</span><span class="info-desc">toggle this panel</span></div>
+      <div class="info-row"><span class="info-key">esc</span><span class="info-desc">close any panel</span></div>
+      <div class="info-row"><span class="info-key">click</span><span class="info-desc">show definition or quote</span></div>
+    </div>
+
+    <div class="info-section">
+      <div class="info-section-title">dictionaries</div>
+      <div class="info-text">
+        Press <span class="info-key" style="display:inline-flex;vertical-align:middle;height:18px;min-width:18px;font-size:10px">d</span> to open the dictionary menu, or use hotkeys directly: <span class="info-key" style="display:inline-flex;vertical-align:middle;height:18px;min-width:18px;font-size:10px">1</span> Word Horde &nbsp;<span class="info-key" style="display:inline-flex;vertical-align:middle;height:18px;min-width:18px;font-size:10px">2</span> Bukowski &nbsp;<span class="info-key" style="display:inline-flex;vertical-align:middle;height:18px;min-width:18px;font-size:10px">3</span> Camus &nbsp;<span class="info-key" style="display:inline-flex;vertical-align:middle;height:18px;min-width:18px;font-size:10px">4</span> McCarthy &nbsp;<span class="info-key" style="display:inline-flex;vertical-align:middle;height:18px;min-width:18px;font-size:10px">5</span> Philip K. Dick. When multiple sources are active, 1,000 words are drawn equally from each.
       </div>
     </div>
 
     <div class="info-section">
       <div class="info-section-title">filters</div>
       <div class="info-text">
-        Press <span class="info-key" style="display:inline-flex;vertical-align:middle;height:18px;min-width:18px;font-size:10px">f</span> to open the filter menu. Filter words by mood (joy, sadness, anger...), part of speech, syllable count, or sentiment. Filters can be combined. Each option has a hotkey. Press <span class="info-key" style="display:inline-flex;vertical-align:middle;height:18px;min-width:18px;font-size:10px">m</span> to toggle between AND mode (words match all selected moods) and OR mode (words match any selected mood).
+        Press <span class="info-key" style="display:inline-flex;vertical-align:middle;height:18px;min-width:18px;font-size:10px">f</span> to filter by mood, part of speech, syllable count, or sentiment. Press <span class="info-key" style="display:inline-flex;vertical-align:middle;height:18px;min-width:18px;font-size:10px">m</span> to toggle AND/OR mode for mood filters.
       </div>
     </div>
 
     <div class="info-section">
       <div class="info-section-title">data sources</div>
       <div class="info-text">
-        Emotions from the NRC Word-Emotion Association Lexicon. Syllable counts from the CMU Pronouncing Dictionary. Part of speech extracted heuristically from definitions.
+        Emotions from the NRC Word-Emotion Association Lexicon. Syllable counts from the CMU Pronouncing Dictionary. Author quotes extracted from full text of each author's works.
       </div>
     </div>
 
@@ -426,8 +347,30 @@
   </div>
 </div>
 
-<div id="menu-overlay" onclick="if(event.target===this)toggleMenu()">
-  <div id="menu">
+<!-- Dictionary selector overlay -->
+<div id="dict-overlay" class="overlay" onclick="if(event.target===this)toggleDictMenu()">
+  <div id="dict-panel" class="panel">
+    <h2>dictionaries</h2>
+    <div class="menu-section">
+      <div class="menu-section-title">select sources — any combination</div>
+      <div id="dict-rows"></div>
+    </div>
+    <div class="info-text" style="font-size:11px;color:#444;padding:2px 8px 10px">
+      Words drawn equally from each selected source. Click a word to see how the author used it.
+    </div>
+    <div class="menu-footer">
+      <span class="menu-footer-hint">
+        <span class="menu-key">esc</span> close
+        <span class="menu-key">r</span> regenerate
+      </span>
+      <span class="menu-footer-count" id="dict-word-count"></span>
+    </div>
+  </div>
+</div>
+
+<!-- Filter menu overlay -->
+<div id="menu-overlay" class="overlay" onclick="if(event.target===this)toggleMenu()">
+  <div id="menu" class="panel">
     <h2>filters</h2>
 
     <div class="menu-section">
@@ -440,103 +383,35 @@
 
     <div class="menu-section">
       <div class="menu-section-title">mood</div>
-      <div class="menu-row" data-filter="emotion" data-value="joy">
-        <span class="menu-key">1</span>
-        <span class="menu-label">joy</span>
-        <span class="menu-indicator"></span>
-      </div>
-      <div class="menu-row" data-filter="emotion" data-value="trust">
-        <span class="menu-key">2</span>
-        <span class="menu-label">trust</span>
-        <span class="menu-indicator"></span>
-      </div>
-      <div class="menu-row" data-filter="emotion" data-value="anticipation">
-        <span class="menu-key">3</span>
-        <span class="menu-label">anticipation</span>
-        <span class="menu-indicator"></span>
-      </div>
-      <div class="menu-row" data-filter="emotion" data-value="surprise">
-        <span class="menu-key">4</span>
-        <span class="menu-label">surprise</span>
-        <span class="menu-indicator"></span>
-      </div>
-      <div class="menu-row" data-filter="emotion" data-value="sadness">
-        <span class="menu-key">5</span>
-        <span class="menu-label">sadness</span>
-        <span class="menu-indicator"></span>
-      </div>
-      <div class="menu-row" data-filter="emotion" data-value="fear">
-        <span class="menu-key">6</span>
-        <span class="menu-label">fear</span>
-        <span class="menu-indicator"></span>
-      </div>
-      <div class="menu-row" data-filter="emotion" data-value="anger">
-        <span class="menu-key">7</span>
-        <span class="menu-label">anger</span>
-        <span class="menu-indicator"></span>
-      </div>
-      <div class="menu-row" data-filter="emotion" data-value="disgust">
-        <span class="menu-key">8</span>
-        <span class="menu-label">disgust</span>
-        <span class="menu-indicator"></span>
-      </div>
+      <div class="menu-row" data-filter="emotion" data-value="joy"><span class="menu-key">1</span><span class="menu-label">joy</span><span class="menu-indicator"></span></div>
+      <div class="menu-row" data-filter="emotion" data-value="trust"><span class="menu-key">2</span><span class="menu-label">trust</span><span class="menu-indicator"></span></div>
+      <div class="menu-row" data-filter="emotion" data-value="anticipation"><span class="menu-key">3</span><span class="menu-label">anticipation</span><span class="menu-indicator"></span></div>
+      <div class="menu-row" data-filter="emotion" data-value="surprise"><span class="menu-key">4</span><span class="menu-label">surprise</span><span class="menu-indicator"></span></div>
+      <div class="menu-row" data-filter="emotion" data-value="sadness"><span class="menu-key">5</span><span class="menu-label">sadness</span><span class="menu-indicator"></span></div>
+      <div class="menu-row" data-filter="emotion" data-value="fear"><span class="menu-key">6</span><span class="menu-label">fear</span><span class="menu-indicator"></span></div>
+      <div class="menu-row" data-filter="emotion" data-value="anger"><span class="menu-key">7</span><span class="menu-label">anger</span><span class="menu-indicator"></span></div>
+      <div class="menu-row" data-filter="emotion" data-value="disgust"><span class="menu-key">8</span><span class="menu-label">disgust</span><span class="menu-indicator"></span></div>
     </div>
 
     <div class="menu-section">
       <div class="menu-section-title">part of speech</div>
-      <div class="menu-row" data-filter="pos" data-value="noun">
-        <span class="menu-key">n</span>
-        <span class="menu-label">noun</span>
-        <span class="menu-indicator"></span>
-      </div>
-      <div class="menu-row" data-filter="pos" data-value="verb">
-        <span class="menu-key">v</span>
-        <span class="menu-label">verb</span>
-        <span class="menu-indicator"></span>
-      </div>
-      <div class="menu-row" data-filter="pos" data-value="adjective">
-        <span class="menu-key">a</span>
-        <span class="menu-label">adjective</span>
-        <span class="menu-indicator"></span>
-      </div>
+      <div class="menu-row" data-filter="pos" data-value="noun"><span class="menu-key">n</span><span class="menu-label">noun</span><span class="menu-indicator"></span></div>
+      <div class="menu-row" data-filter="pos" data-value="verb"><span class="menu-key">v</span><span class="menu-label">verb</span><span class="menu-indicator"></span></div>
+      <div class="menu-row" data-filter="pos" data-value="adjective"><span class="menu-key">a</span><span class="menu-label">adjective</span><span class="menu-indicator"></span></div>
     </div>
 
     <div class="menu-section">
       <div class="menu-section-title">syllables</div>
-      <div class="menu-row" data-filter="syl" data-value="1">
-        <span class="menu-key">q</span>
-        <span class="menu-label">1 syllable</span>
-        <span class="menu-indicator"></span>
-      </div>
-      <div class="menu-row" data-filter="syl" data-value="2">
-        <span class="menu-key">w</span>
-        <span class="menu-label">2 syllables</span>
-        <span class="menu-indicator"></span>
-      </div>
-      <div class="menu-row" data-filter="syl" data-value="3">
-        <span class="menu-key">e</span>
-        <span class="menu-label">3 syllables</span>
-        <span class="menu-indicator"></span>
-      </div>
-      <div class="menu-row" data-filter="syl" data-value="4+">
-        <span class="menu-key">t</span>
-        <span class="menu-label">4+ syllables</span>
-        <span class="menu-indicator"></span>
-      </div>
+      <div class="menu-row" data-filter="syl" data-value="1"><span class="menu-key">q</span><span class="menu-label">1 syllable</span><span class="menu-indicator"></span></div>
+      <div class="menu-row" data-filter="syl" data-value="2"><span class="menu-key">w</span><span class="menu-label">2 syllables</span><span class="menu-indicator"></span></div>
+      <div class="menu-row" data-filter="syl" data-value="3"><span class="menu-key">e</span><span class="menu-label">3 syllables</span><span class="menu-indicator"></span></div>
+      <div class="menu-row" data-filter="syl" data-value="4+"><span class="menu-key">t</span><span class="menu-label">4+ syllables</span><span class="menu-indicator"></span></div>
     </div>
 
     <div class="menu-section">
       <div class="menu-section-title">sentiment</div>
-      <div class="menu-row" data-filter="sentiment" data-value="positive">
-        <span class="menu-key">+</span>
-        <span class="menu-label">positive</span>
-        <span class="menu-indicator"></span>
-      </div>
-      <div class="menu-row" data-filter="sentiment" data-value="negative">
-        <span class="menu-key">-</span>
-        <span class="menu-label">negative</span>
-        <span class="menu-indicator"></span>
-      </div>
+      <div class="menu-row" data-filter="sentiment" data-value="positive"><span class="menu-key">+</span><span class="menu-label">positive</span><span class="menu-indicator"></span></div>
+      <div class="menu-row" data-filter="sentiment" data-value="negative"><span class="menu-key">-</span><span class="menu-label">negative</span><span class="menu-indicator"></span></div>
     </div>
 
     <div class="menu-footer">
@@ -593,15 +468,31 @@ function shuffle(arr, rng) {
   return arr;
 }
 
+// --- Dictionary config ---
+const DICT_CONFIGS = [
+  { key: 'standard', hotkey: '1', name: 'Word Horde',      sub: '100k+ words',              wordsFile: 'words.json',           defsFile: 'definitions.json',         color: '#61afef', isQuote: false },
+  { key: 'bukowski', hotkey: '2', name: 'Bukowski',         sub: 'novels & poetry',          wordsFile: 'bukowski_words.json',  defsFile: 'bukowski_dictionary.json', color: '#e06c75', isQuote: true  },
+  { key: 'camus',    hotkey: '3', name: 'Camus',            sub: 'The Stranger + 2',         wordsFile: 'camus_words.json',     defsFile: 'camus_dictionary.json',    color: '#98c379', isQuote: true  },
+  { key: 'mccarthy', hotkey: '4', name: 'McCarthy',         sub: 'Blood Meridian',           wordsFile: 'mccarthy_words.json',  defsFile: 'mccarthy_dictionary.json', color: '#d19a66', isQuote: true  },
+  { key: 'dick',     hotkey: '5', name: 'Philip K. Dick',   sub: 'High Castle + stories',    wordsFile: 'dick_words.json',      defsFile: 'dick_dictionary.json',     color: '#c678dd', isQuote: true  },
+];
+
+// Loaded data — keyed by dict key
+const DICTS = {};             // key -> { word: {e,s,p,c} }
+const DEFS = {};              // key -> { word: string }
+const DICT_PROMISES = {};     // key -> Promise (prevents double-fetch)
+
+let activeDicts = new Set(['standard']);
+let wordSourceMap = {};       // word -> dictKey, updated each buildSwarm
+
 // --- Globals ---
-let DICT = {};  // word -> {e, s, p} metadata
-let DEFS = {};  // word -> definition string (lazy-loaded)
 let swarmCount = 0;
 let menuOpen = false;
+let dictMenuOpen = false;
+let infoOpen = false;
 let activeFilters = { emotions: new Set(), pos: null, syllables: null, sentiment: null };
-let filterMode = 'and'; // 'and' or 'or'
+let filterMode = 'and';
 
-// Key -> { filter, value } mapping
 const KEY_MAP = {
   '1': { filter: 'emotion', value: 'joy' },
   '2': { filter: 'emotion', value: 'trust' },
@@ -619,22 +510,35 @@ const KEY_MAP = {
   'e': { filter: 'syl', value: '3' },
   't': { filter: 'syl', value: '4+' },
   '+': { filter: 'sentiment', value: 'positive' },
-  '=': { filter: 'sentiment', value: 'positive' },  // unshifted +
+  '=': { filter: 'sentiment', value: 'positive' },
   '-': { filter: 'sentiment', value: 'negative' },
 };
+
+// --- Dict loading ---
+function loadDictWords(key) {
+  if (DICT_PROMISES[key]) return DICT_PROMISES[key];
+  const config = DICT_CONFIGS.find(c => c.key === key);
+  DICT_PROMISES[key] = fetch(config.wordsFile)
+    .then(r => r.json())
+    .then(data => {
+      DICTS[key] = data;
+      // Lazy-load definitions/quotes in background
+      fetch(config.defsFile).then(r => r.json()).then(d => { DEFS[key] = d; }).catch(() => {});
+    });
+  return DICT_PROMISES[key];
+}
 
 // --- Filter logic ---
 function hasActiveFilters() {
   return activeFilters.emotions.size > 0 || activeFilters.pos || activeFilters.syllables || activeFilters.sentiment;
 }
 
-function getFilteredWords() {
-  const words = Object.keys(DICT);
+function getFilteredWordsForDict(key) {
+  const dict = DICTS[key] || {};
+  const words = Object.keys(dict);
   if (!hasActiveFilters()) return words;
-
   return words.filter(w => {
-    const entry = DICT[w];
-
+    const entry = dict[w];
     if (activeFilters.emotions.size > 0) {
       if (!entry.e) return false;
       if (filterMode === 'and') {
@@ -649,16 +553,12 @@ function getFilteredWords() {
         if (!match) return false;
       }
     }
-
     if (activeFilters.sentiment) {
-      if (!entry.e) return false;
-      if (!entry.e.includes(activeFilters.sentiment)) return false;
+      if (!entry.e || !entry.e.includes(activeFilters.sentiment)) return false;
     }
-
     if (activeFilters.pos) {
       if (entry.p !== activeFilters.pos) return false;
     }
-
     if (activeFilters.syllables) {
       if (!entry.s) return false;
       if (activeFilters.syllables === '4+') {
@@ -667,18 +567,14 @@ function getFilteredWords() {
         if (entry.s !== parseInt(activeFilters.syllables)) return false;
       }
     }
-
     return true;
   });
 }
 
 function toggleFilter(filterType, value) {
   if (filterType === 'emotion') {
-    if (activeFilters.emotions.has(value)) {
-      activeFilters.emotions.delete(value);
-    } else {
-      activeFilters.emotions.add(value);
-    }
+    if (activeFilters.emotions.has(value)) activeFilters.emotions.delete(value);
+    else activeFilters.emotions.add(value);
   } else if (filterType === 'pos') {
     activeFilters.pos = activeFilters.pos === value ? null : value;
   } else if (filterType === 'syl') {
@@ -686,9 +582,8 @@ function toggleFilter(filterType, value) {
   } else if (filterType === 'sentiment') {
     activeFilters.sentiment = activeFilters.sentiment === value ? null : value;
   }
-
   updateMenuState();
-  updateActiveFiltersDisplay();
+  updateStatusBar();
   swarmCount++;
   buildSwarm();
 }
@@ -699,7 +594,7 @@ function clearFilters() {
   activeFilters.syllables = null;
   activeFilters.sentiment = null;
   updateMenuState();
-  updateActiveFiltersDisplay();
+  updateStatusBar();
   swarmCount++;
   buildSwarm();
 }
@@ -708,10 +603,7 @@ function toggleFilterMode() {
   filterMode = filterMode === 'and' ? 'or' : 'and';
   document.getElementById('mode-label').textContent =
     filterMode === 'and' ? 'AND — words match all moods' : 'OR — words match any mood';
-  if (activeFilters.emotions.size > 1) {
-    swarmCount++;
-    buildSwarm();
-  }
+  if (activeFilters.emotions.size > 1) { swarmCount++; buildSwarm(); }
   updateFilterCount();
 }
 
@@ -724,36 +616,45 @@ function isRowActive(filterType, value) {
 }
 
 function updateMenuState() {
-  document.querySelectorAll('.menu-row').forEach(row => {
-    const f = row.dataset.filter;
-    const v = row.dataset.value;
-    row.classList.toggle('active', isRowActive(f, v));
+  document.querySelectorAll('.menu-row[data-filter]').forEach(row => {
+    row.classList.toggle('active', isRowActive(row.dataset.filter, row.dataset.value));
   });
   updateFilterCount();
 }
 
 function updateFilterCount() {
   const el = document.getElementById('filter-count');
+  const activeKeys = [...activeDicts].filter(k => DICTS[k]);
   if (hasActiveFilters()) {
-    const count = getFilteredWords().length;
+    const count = activeKeys.reduce((sum, k) => sum + getFilteredWordsForDict(k).length, 0);
     el.textContent = count.toLocaleString() + ' match';
   } else {
-    el.textContent = Object.keys(DICT).length.toLocaleString() + ' words';
+    const count = activeKeys.reduce((sum, k) => sum + Object.keys(DICTS[k] || {}).length, 0);
+    el.textContent = count.toLocaleString() + ' words';
   }
 }
 
-function updateActiveFiltersDisplay() {
+function updateStatusBar() {
   const el = document.getElementById('active-filters');
-  if (!hasActiveFilters()) { el.innerHTML = ''; return; }
+  let html = '';
 
-  const parts = [];
-  for (const emo of activeFilters.emotions) parts.push(emo);
-  if (activeFilters.pos) parts.push(activeFilters.pos);
-  if (activeFilters.syllables) parts.push(activeFilters.syllables === '4+' ? '4+ syl' : activeFilters.syllables + ' syl');
-  if (activeFilters.sentiment) parts.push(activeFilters.sentiment);
+  // Show active non-standard dicts as colored chips
+  for (const key of activeDicts) {
+    if (key === 'standard') continue;
+    const cfg = DICT_CONFIGS.find(c => c.key === key);
+    html += `<span style="border-color:${cfg.color};color:${cfg.color}">${cfg.name}</span>`;
+  }
 
-  el.innerHTML = parts.map(p => '<span>' + p + '</span>').join('') +
-    '<span style="color:#444;cursor:pointer;pointer-events:auto" onclick="clearFilters()">clear</span>';
+  // Show active filters
+  if (hasActiveFilters()) {
+    for (const emo of activeFilters.emotions) html += `<span>${emo}</span>`;
+    if (activeFilters.pos) html += `<span>${activeFilters.pos}</span>`;
+    if (activeFilters.syllables) html += `<span>${activeFilters.syllables === '4+' ? '4+ syl' : activeFilters.syllables + ' syl'}</span>`;
+    if (activeFilters.sentiment) html += `<span>${activeFilters.sentiment}</span>`;
+    html += `<span style="color:#444;cursor:pointer;pointer-events:auto" onclick="clearFilters()">clear</span>`;
+  }
+
+  el.innerHTML = html;
 }
 
 // --- Build swarm ---
@@ -764,12 +665,50 @@ function buildSwarm() {
 
   document.getElementById('date-label').textContent = seedStr.toUpperCase();
 
-  const pool = getFilteredWords();
-  const picked = shuffle([...pool], rng).slice(0, 1000);
+  const activeKeys = [...activeDicts].filter(k => DICTS[k]);
+  if (activeKeys.length === 0) return;
+
+  const TOTAL = 1000;
+  const n = activeKeys.length;
+
+  // Equal target per dict
+  let targets = activeKeys.map(() => Math.floor(TOTAL / n));
+  let rem = TOTAL - targets.reduce((a, b) => a + b, 0);
+  for (let i = 0; i < rem; i++) targets[i]++;
+
+  // Get shuffled filtered pools
+  const pools = activeKeys.map(k => shuffle([...getFilteredWordsForDict(k)], rng));
+
+  // Clamp to pool size, redistribute overflow to dicts with spare capacity
+  let overflow = 0;
+  const counts = pools.map((pool, i) => {
+    const actual = Math.min(targets[i], pool.length);
+    overflow += targets[i] - actual;
+    return actual;
+  });
+  if (overflow > 0) {
+    for (let i = 0; i < pools.length && overflow > 0; i++) {
+      const spare = pools[i].length - counts[i];
+      const give = Math.min(spare, overflow);
+      counts[i] += give;
+      overflow -= give;
+    }
+  }
+
+  // Pick words, track source
+  wordSourceMap = {};
+  const picked = [];
+  pools.forEach((pool, i) => {
+    const key = activeKeys[i];
+    pool.slice(0, counts[i]).forEach(w => {
+      picked.push(w);
+      wordSourceMap[w] = key;
+    });
+  });
+  shuffle(picked, rng);
 
   const swarm = document.getElementById('swarm');
   const frag = document.createDocumentFragment();
-
   picked.forEach(word => {
     const span = document.createElement('span');
     span.className = 'word';
@@ -779,7 +718,6 @@ function buildSwarm() {
     span.dataset.word = word;
     frag.appendChild(span);
   });
-
   swarm.innerHTML = '';
   swarm.appendChild(frag);
   updateFilterCount();
@@ -802,11 +740,29 @@ document.getElementById('swarm').addEventListener('click', (e) => {
 
   activeWordEl = el;
   ignoreMove = true;
-  const entry = DICT[word] || {};
+
+  const sourceKey = wordSourceMap[word] || [...activeDicts][0] || 'standard';
+  const config = DICT_CONFIGS.find(c => c.key === sourceKey) || DICT_CONFIGS[0];
+  const entry = (DICTS[sourceKey] || {})[word] || {};
 
   tipWord.textContent = word;
-  tipPos.textContent = entry.p || '';
-  tipDef.textContent = DEFS[word] || (Object.keys(DEFS).length ? 'No definition available.' : 'Loading definitions...');
+
+  // POS or author attribution
+  if (entry.p) {
+    tipPos.textContent = entry.p;
+  } else if (config.isQuote) {
+    tipPos.textContent = '— ' + config.name;
+  } else {
+    tipPos.textContent = '';
+  }
+
+  const defText = (DEFS[sourceKey] || {})[word];
+  const anyDefsLoaded = Object.keys(DEFS).length > 0;
+  tipDef.textContent = defText ||
+    (anyDefsLoaded ? (config.isQuote ? 'No quote available.' : 'No definition available.') : 'Loading...');
+
+  // Quote styling for author dicts
+  tooltip.classList.toggle('is-quote', !!config.isQuote);
 
   const meta = [];
   if (entry.s) meta.push(entry.s + ' syl');
@@ -816,16 +772,15 @@ document.getElementById('swarm').addEventListener('click', (e) => {
     if (emotions.length) meta.push(emotions.join(', '));
     if (sentiments.length) meta.push('(' + sentiments.join(', ') + ')');
   }
-  tipMeta.textContent = meta.join('  ·  ');
+  if (entry.c) meta.push('used ' + entry.c.toLocaleString() + '\u00d7');
+  tipMeta.textContent = meta.join('  \u00b7  ');
 
   tooltip.style.display = 'block';
   positionTooltip(e.clientX, e.clientY);
 });
 
 document.addEventListener('click', (e) => {
-  if (!e.target.closest('.word') && !e.target.closest('#tooltip')) {
-    hideTooltip();
-  }
+  if (!e.target.closest('.word') && !e.target.closest('#tooltip')) hideTooltip();
 });
 
 let ignoreMove = false;
@@ -837,8 +792,7 @@ document.addEventListener('mousemove', () => {
 function positionTooltip(x, y) {
   const pad = 12;
   const rect = tooltip.getBoundingClientRect();
-  let left = x + pad;
-  let top = y + pad;
+  let left = x + pad, top = y + pad;
   if (left + 400 > window.innerWidth) left = x - 400 - pad;
   if (top + rect.height > window.innerHeight) top = y - rect.height - pad;
   if (left < 0) left = pad;
@@ -853,101 +807,120 @@ function hideTooltip() {
 }
 
 // --- Info panel ---
-let infoOpen = false;
 function toggleInfo() {
   infoOpen = !infoOpen;
   document.getElementById('info-overlay').classList.toggle('visible', infoOpen);
   if (infoOpen && menuOpen) toggleMenu();
+  if (infoOpen && dictMenuOpen) toggleDictMenu();
 }
 
-// --- Menu ---
+// --- Filter menu ---
 function toggleMenu() {
   menuOpen = !menuOpen;
   document.getElementById('menu-overlay').classList.toggle('visible', menuOpen);
   if (menuOpen) {
     if (infoOpen) toggleInfo();
+    if (dictMenuOpen) toggleDictMenu();
     updateMenuState();
   }
 }
 
-// Menu row clicks
 document.getElementById('menu').addEventListener('click', (e) => {
-  const row = e.target.closest('.menu-row');
-  if (!row) return;
-  toggleFilter(row.dataset.filter, row.dataset.value);
+  const row = e.target.closest('.menu-row[data-filter]');
+  if (row) toggleFilter(row.dataset.filter, row.dataset.value);
 });
+
+// --- Dict menu ---
+function renderDictRows() {
+  const container = document.getElementById('dict-rows');
+  container.innerHTML = '';
+  DICT_CONFIGS.forEach(cfg => {
+    const isActive = activeDicts.has(cfg.key);
+    const wordCount = DICTS[cfg.key] ? Object.keys(DICTS[cfg.key]).length.toLocaleString() + ' words' : 'click to load';
+    const row = document.createElement('div');
+    row.className = 'menu-row' + (isActive ? ' active' : '');
+    row.dataset.dictKey = cfg.key;
+    row.innerHTML =
+      `<span class="menu-key">${cfg.hotkey}</span>` +
+      `<span class="dict-dot" style="background:${isActive ? cfg.color : '#333'}"></span>` +
+      `<span class="menu-label">${cfg.name} <span class="dict-sub">${cfg.sub}</span></span>` +
+      `<span style="color:#555;font-size:11px">${wordCount}</span>` +
+      `<span class="menu-indicator"></span>`;
+    row.addEventListener('click', () => toggleDict(cfg.key));
+    container.appendChild(row);
+  });
+
+  const totalWords = [...activeDicts]
+    .filter(k => DICTS[k])
+    .reduce((sum, k) => sum + Object.keys(DICTS[k]).length, 0);
+  document.getElementById('dict-word-count').textContent =
+    totalWords ? totalWords.toLocaleString() + ' words active' : '';
+}
+
+function toggleDictMenu() {
+  dictMenuOpen = !dictMenuOpen;
+  document.getElementById('dict-overlay').classList.toggle('visible', dictMenuOpen);
+  if (dictMenuOpen) {
+    if (menuOpen) toggleMenu();
+    if (infoOpen) toggleInfo();
+    renderDictRows();
+  }
+}
+
+async function toggleDict(key) {
+  if (activeDicts.has(key)) {
+    if (activeDicts.size === 1) return; // must keep at least one
+    activeDicts.delete(key);
+  } else {
+    activeDicts.add(key);
+    if (!DICTS[key]) {
+      // Show loading state in row while fetching
+      renderDictRows();
+      await loadDictWords(key);
+    }
+  }
+  renderDictRows();
+  updateStatusBar();
+  swarmCount++;
+  buildSwarm();
+}
+
 
 // --- Keyboard ---
 document.addEventListener('keydown', (e) => {
-  // Don't capture if typing in an input
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-
   const key = e.key;
 
-  // Escape: close info, menu, or tooltip
   if (key === 'Escape') {
     if (infoOpen) { toggleInfo(); return; }
+    if (dictMenuOpen) { toggleDictMenu(); return; }
     if (menuOpen) { toggleMenu(); return; }
     hideTooltip();
     return;
   }
 
-  // a = toggle info
-  if (key === 'a' || key === 'A') {
-    toggleInfo();
+  if (key === 'a' || key === 'A') { toggleInfo(); return; }
+  if (key === 'd' || key === 'D') { toggleDictMenu(); return; }
+  if (key === 'f' || key === 'F' || key === '/') { e.preventDefault(); toggleMenu(); return; }
+
+  if (dictMenuOpen) {
+    if (key === 'r' || key === 'R') { swarmCount++; hideTooltip(); buildSwarm(); return; }
+    const dictCfg = DICT_CONFIGS.find(c => c.hotkey === key);
+    if (dictCfg) { toggleDict(dictCfg.key); return; }
     return;
   }
 
-  // F or / : toggle menu
-  if (key === 'f' || key === 'F' || key === '/') {
-    e.preventDefault();
-    toggleMenu();
-    return;
-  }
-
-  // When menu is open, handle filter keys
   if (menuOpen) {
-    // m = toggle filter mode
-    if (key === 'm' || key === 'M') {
-      toggleFilterMode();
-      return;
-    }
-
-    // c = clear all
-    if (key === 'c' || key === 'C') {
-      clearFilters();
-      return;
-    }
-
-    // r = regenerate (also works when menu closed)
-    if (key === 'r' || key === 'R') {
-      swarmCount++;
-      hideTooltip();
-      buildSwarm();
-      return;
-    }
-
+    if (key === 'm' || key === 'M') { toggleFilterMode(); return; }
+    if (key === 'c' || key === 'C') { clearFilters(); return; }
+    if (key === 'r' || key === 'R') { swarmCount++; hideTooltip(); buildSwarm(); return; }
     const mapping = KEY_MAP[key];
-    if (mapping) {
-      e.preventDefault();
-      toggleFilter(mapping.filter, mapping.value);
-      return;
-    }
+    if (mapping) { e.preventDefault(); toggleFilter(mapping.filter, mapping.value); return; }
     return;
   }
 
-  // When menu is closed
-  if (key === 'c' || key === 'C') {
-    if (infoOpen) toggleInfo();
-    clearFilters();
-    return;
-  }
-  if (key === 'r' || key === 'R') {
-    if (infoOpen) toggleInfo();
-    swarmCount++;
-    hideTooltip();
-    buildSwarm();
-  }
+  if (key === 'c' || key === 'C') { if (infoOpen) toggleInfo(); clearFilters(); return; }
+  if (key === 'r' || key === 'R') { if (infoOpen) toggleInfo(); swarmCount++; hideTooltip(); buildSwarm(); }
 });
 
 // --- Idle autohide for UI chrome ---
@@ -966,23 +939,14 @@ document.addEventListener('keydown', resetIdle);
 document.addEventListener('touchstart', resetIdle);
 resetIdle();
 
-// --- Load dictionary and start ---
-// 1. Load words metadata first (small, ~2MB) — renders swarm immediately
-fetch('words.json')
-  .then(r => r.json())
-  .then(data => {
-    DICT = data;
+// --- Initial load ---
+loadDictWords('standard')
+  .then(() => {
     document.getElementById('loading').style.display = 'none';
     buildSwarm();
-
-    // 2. Lazy-load definitions in background (large, only needed on click)
-    fetch('definitions.json')
-      .then(r => r.json())
-      .then(defs => { DEFS = defs; })
-      .catch(() => {});
   })
   .catch(err => {
-    document.getElementById('loading').textContent = 'Failed to load dictionary: ' + err.message;
+    document.getElementById('loading').textContent = 'Failed to load: ' + err.message;
   });
 </script>
 </body>
