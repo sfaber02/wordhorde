@@ -168,25 +168,48 @@
     height: 18px; min-width: 18px; font-size: 10px; margin: 0 2px;
   }
 
-  /* Mobile menu link */
-  #mobile-menu-link {
+  /* Mobile menu buttons */
+  .mobile-btn {
     display: none;
     position: fixed;
     top: 8px;
-    right: 12px;
     color: #555;
     font-size: 13px;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     cursor: pointer;
     z-index: 900;
-    padding: 6px 10px;
+    padding: 8px 12px;
     border: 1px solid #333;
     border-radius: 6px;
     background: rgba(0,0,0,0.6);
     backdrop-filter: blur(6px);
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
   }
-  #mobile-menu-link:hover { color: #aaa; border-color: #555; }
-  @media (pointer: coarse) { #mobile-menu-link { display: block; } }
+  .mobile-btn:active { color: #aaa; border-color: #555; }
+  #mobile-menu-link { right: 12px; }
+  #mobile-dict-link { right: 88px; }
+  @media (pointer: coarse) {
+    .mobile-btn { display: block; }
+  }
+
+  /* Nav link row in panels */
+  .menu-nav-row {
+    display: flex;
+    align-items: center;
+    padding: 7px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.1s;
+    gap: 10px;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    border: 1px solid #2a2a2a;
+    margin-bottom: 14px;
+  }
+  .menu-nav-row:hover, .menu-nav-row:active { background: #252525; border-color: #444; }
+  .menu-nav-label { color: #666; font-size: 12px; flex: 1; }
+  .menu-nav-arrow { color: #444; font-size: 14px; }
 
   /* Active filters/dicts bar */
   #active-filters {
@@ -227,13 +250,16 @@
   .menu-row {
     display: flex;
     align-items: center;
-    padding: 5px 8px;
+    padding: 8px 8px;
     border-radius: 6px;
     cursor: pointer;
     transition: background 0.1s;
     gap: 10px;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
   }
   .menu-row:hover { background: #252525; }
+  .menu-row:active { background: #252525; }
   .menu-row.active { background: #252525; }
   .menu-key {
     display: inline-flex;
@@ -298,7 +324,8 @@
 </div>
 
 <div id="active-filters"></div>
-<div id="mobile-menu-link" onclick="toggleMenu()">filters</div>
+<div id="mobile-dict-link" class="mobile-btn" onclick="toggleDictMenu()">dicts</div>
+<div id="mobile-menu-link" class="mobile-btn" onclick="toggleMenu()">filters</div>
 
 <!-- Info overlay -->
 <div id="info-overlay" class="overlay" onclick="if(event.target===this)toggleInfo()">
@@ -372,6 +399,11 @@
 <div id="menu-overlay" class="overlay" onclick="if(event.target===this)toggleMenu()">
   <div id="menu" class="panel">
     <h2>filters</h2>
+
+    <div class="menu-nav-row" onclick="toggleMenu(); setTimeout(toggleDictMenu, 50)">
+      <span class="menu-nav-label">dictionaries</span>
+      <span class="menu-nav-arrow">›</span>
+    </div>
 
     <div class="menu-section">
       <div class="menu-section-title">filter mode</div>
