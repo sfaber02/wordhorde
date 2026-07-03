@@ -1016,13 +1016,28 @@ function toggleRhymeMode() {
   hideTooltip();
   document.getElementById('rhyme-bar').classList.add('visible');
   document.getElementById('rhyme-label').innerHTML = closeBtn();
+  document.getElementById('rhyme-input').value = '';
+  showRhymeInput(true);
+}
+
+function showRhymeInput(focus) {
   const input = document.getElementById('rhyme-input');
-  input.focus();
-  input.select();
+  input.style.display = '';
+  if (focus) { input.focus(); input.select(); }
+}
+
+function hideRhymeInput() {
+  const input = document.getElementById('rhyme-input');
+  input.blur();
+  input.style.display = 'none';
 }
 
 function closeBtn() {
   return ' <span class="rhyme-close" onclick="toggleRhymeMode()">esc</span>';
+}
+
+function editBtn() {
+  return ' <span class="rhyme-close" onclick="showRhymeInput(true)">edit</span>';
 }
 
 async function runRhymeSearch(rawWord) {
@@ -1076,7 +1091,7 @@ function renderRhymeResults(word, results, offline) {
   if (!results || results.length === 0) {
     swarm.innerHTML = '';
     label.innerHTML = `no rhymes for “${word}”` +
-      (offline ? ' <span style="color:#666">(offline)</span>' : '') + closeBtn();
+      (offline ? ' <span style="color:#666">(offline)</span>' : '') + editBtn() + closeBtn();
     return;
   }
 
@@ -1090,7 +1105,7 @@ function renderRhymeResults(word, results, offline) {
   label.innerHTML = `${results.length} rhyme${results.length === 1 ? '' : 's'} for ` +
     `<b style="color:#bbb">${word}</b>` +
     (offline ? ' <span style="color:#666">· offline, perfect rhymes only</span>' : '') +
-    closeBtn();
+    editBtn() + closeBtn();
 }
 
 async function loadRhymeIndex() {
@@ -1124,8 +1139,12 @@ rhymeInput.addEventListener('input', () => {
   rhymeDebounce = setTimeout(() => runRhymeSearch(rhymeInput.value), 300);
 });
 rhymeInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') { clearTimeout(rhymeDebounce); runRhymeSearch(rhymeInput.value); }
-  else if (e.key === 'Escape') { e.preventDefault(); toggleRhymeMode(); }
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    clearTimeout(rhymeDebounce);
+    hideRhymeInput();
+    runRhymeSearch(rhymeInput.value);
+  } else if (e.key === 'Escape') { e.preventDefault(); toggleRhymeMode(); }
 });
 
 
@@ -1145,7 +1164,7 @@ document.addEventListener('keydown', (e) => {
 
   if (key === 'a' || key === 'A') { toggleInfo(); return; }
   if (key === 'd' || key === 'D') { toggleDictMenu(); return; }
-  if (key === 'y' || key === 'Y') { toggleRhymeMode(); return; }
+  if (key === 'y' || key === 'Y') { e.preventDefault(); toggleRhymeMode(); return; }
   if (key === 'f' || key === 'F' || key === '/') { e.preventDefault(); toggleMenu(); return; }
 
   if (dictMenuOpen) {
