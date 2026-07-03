@@ -189,9 +189,60 @@
   .mobile-btn:active { color: #aaa; border-color: #555; }
   #mobile-menu-link { right: 12px; }
   #mobile-dict-link { right: 88px; }
+  #mobile-rhyme-link { right: 158px; }
   @media (pointer: coarse) {
     .mobile-btn { display: block; }
   }
+
+  /* Rhyme mode bar */
+  #rhyme-bar {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 950;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 14px 12px 12px;
+    background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0));
+    pointer-events: none;
+  }
+  #rhyme-bar.visible { display: flex; }
+  #rhyme-input {
+    pointer-events: auto;
+    width: min(340px, 80vw);
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: #ddd;
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 15px;
+    text-align: center;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #rhyme-input:focus { border-color: #555; }
+  #rhyme-input::placeholder { color: #555; }
+  #rhyme-label {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 12px;
+    color: #666;
+    min-height: 15px;
+    text-align: center;
+  }
+  #rhyme-label .rhyme-close {
+    pointer-events: auto;
+    cursor: pointer;
+    color: #555;
+    border: 1px solid #333;
+    border-radius: 10px;
+    padding: 1px 8px;
+    margin-left: 8px;
+  }
+  #rhyme-label .rhyme-close:hover { color: #aaa; border-color: #555; }
 
   /* Nav link row in panels */
   .menu-nav-row {
@@ -324,8 +375,15 @@
 </div>
 
 <div id="active-filters"></div>
+<div id="mobile-rhyme-link" class="mobile-btn" onclick="toggleRhymeMode()">rhyme</div>
 <div id="mobile-dict-link" class="mobile-btn" onclick="toggleDictMenu()">dicts</div>
 <div id="mobile-menu-link" class="mobile-btn" onclick="toggleMenu()">filters</div>
+
+<!-- Rhyme mode input bar -->
+<div id="rhyme-bar">
+  <input id="rhyme-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="type a word to rhyme…">
+  <div id="rhyme-label"></div>
+</div>
 
 <!-- Info overlay -->
 <div id="info-overlay" class="overlay" onclick="if(event.target===this)toggleInfo()">
@@ -340,6 +398,7 @@
       <div class="info-section-title">controls</div>
       <div class="info-row"><span class="info-key">d</span><span class="info-desc">choose dictionaries</span></div>
       <div class="info-row"><span class="info-key">f</span><span class="info-desc">open filter menu</span></div>
+      <div class="info-row"><span class="info-key">y</span><span class="info-desc">rhyme mode — type a word for rhymes</span></div>
       <div class="info-row"><span class="info-key">r</span><span class="info-desc">regenerate word set</span></div>
       <div class="info-row"><span class="info-key">c</span><span class="info-desc">clear all filters</span></div>
       <div class="info-row"><span class="info-key">a</span><span class="info-desc">toggle this panel</span></div>
@@ -362,9 +421,16 @@
     </div>
 
     <div class="info-section">
+      <div class="info-section-title">rhyme mode</div>
+      <div class="info-text">
+        Press <span class="info-key" style="display:inline-flex;vertical-align:middle;height:18px;min-width:18px;font-size:10px">y</span> and type a word to fill the screen with words that rhyme with it — perfect and near rhymes blended together. Click any rhyme for its definition.
+      </div>
+    </div>
+
+    <div class="info-section">
       <div class="info-section-title">data sources</div>
       <div class="info-text">
-        Emotions from the NRC Word-Emotion Association Lexicon. Syllable counts from the CMU Pronouncing Dictionary. Author quotes extracted from full text of each author's works.
+        Emotions from the NRC Word-Emotion Association Lexicon. Syllable counts and rhymes from the CMU Pronouncing Dictionary; live rhymes via the Datamuse API. Author quotes extracted from full text of each author's works.
       </div>
     </div>
 
@@ -522,6 +588,11 @@ let swarmCount = 0;
 let menuOpen = false;
 let dictMenuOpen = false;
 let infoOpen = false;
+let rhymeMode = false;
+let rhymeIndex = null;        // { word: rhymeKey } — lazy-loaded offline fallback
+let rhymeKeyToWords = null;   // rhymeKey -> [words], built from rhymeIndex
+let rhymeReqId = 0;           // guards against out-of-order async results
+let rhymeMeta = {};           // word -> syllable count for rhyme words not in a dict
 let activeFilters = { emotions: new Set(), pos: null, syllables: null, sentiment: null };
 let filterMode = 'and';
 
@@ -691,6 +762,7 @@ function updateStatusBar() {
 
 // --- Build swarm ---
 function buildSwarm() {
+  exitRhymeUI();   // any daily-swarm rebuild leaves rhyme mode
   const seedStr = new Date().toDateString() + (swarmCount > 0 ? '-' + swarmCount : '');
   const seed = dateSeed(seedStr);
   const rng = mulberry32(seed);
@@ -739,9 +811,15 @@ function buildSwarm() {
   });
   shuffle(picked, rng);
 
+  renderWords(picked, rng);
+  updateFilterCount();
+}
+
+// Render a list of words into the swarm as a cloud (shared by daily swarm + rhyme mode)
+function renderWords(words, rng) {
   const swarm = document.getElementById('swarm');
   const frag = document.createDocumentFragment();
-  picked.forEach(word => {
+  words.forEach(word => {
     const span = document.createElement('span');
     span.className = 'word';
     span.textContent = word;
@@ -752,7 +830,6 @@ function buildSwarm() {
   });
   swarm.innerHTML = '';
   swarm.appendChild(frag);
-  updateFilterCount();
 }
 
 // --- Tooltip ---
@@ -798,6 +875,7 @@ document.getElementById('swarm').addEventListener('click', (e) => {
 
   const meta = [];
   if (entry.s) meta.push(entry.s + ' syl');
+  else if (rhymeMeta[word]) meta.push(rhymeMeta[word] + ' syl');
   if (entry.e && entry.e.length) {
     const emotions = entry.e.filter(x => x !== 'positive' && x !== 'negative');
     const sentiments = entry.e.filter(x => x === 'positive' || x === 'negative');
@@ -917,6 +995,139 @@ async function toggleDict(key) {
   buildSwarm();
 }
 
+// --- Rhyme mode ---
+function exitRhymeUI() {
+  rhymeMode = false;
+  document.getElementById('rhyme-bar').classList.remove('visible');
+}
+
+function toggleRhymeMode() {
+  if (rhymeMode) {
+    rhymeReqId++;               // cancel any in-flight search
+    exitRhymeUI();
+    hideTooltip();
+    buildSwarm();               // restore the daily swarm
+    return;
+  }
+  rhymeMode = true;
+  if (infoOpen) toggleInfo();
+  if (menuOpen) toggleMenu();
+  if (dictMenuOpen) toggleDictMenu();
+  hideTooltip();
+  document.getElementById('rhyme-bar').classList.add('visible');
+  document.getElementById('rhyme-label').innerHTML = closeBtn();
+  const input = document.getElementById('rhyme-input');
+  input.focus();
+  input.select();
+}
+
+function closeBtn() {
+  return ' <span class="rhyme-close" onclick="toggleRhymeMode()">esc</span>';
+}
+
+async function runRhymeSearch(rawWord) {
+  const word = rawWord.trim().toLowerCase();
+  const label = document.getElementById('rhyme-label');
+  if (word.length < 2) {
+    rhymeReqId++;
+    document.getElementById('swarm').innerHTML = '';
+    label.innerHTML = closeBtn();
+    return;
+  }
+  const reqId = ++rhymeReqId;
+  label.innerHTML = 'finding rhymes…';
+  hideTooltip();
+
+  let results = null, offline = false;
+  try {
+    const [perfect, near] = await Promise.all([
+      fetch(`https://api.datamuse.com/words?rel_rhy=${encodeURIComponent(word)}&max=80`).then(r => r.json()),
+      fetch(`https://api.datamuse.com/words?rel_nry=${encodeURIComponent(word)}&max=80`).then(r => r.json()),
+    ]);
+    const seen = new Set();
+    results = [];
+    for (const item of [...perfect, ...near]) {
+      const w = item.word;
+      if (!w || w === word || seen.has(w)) continue;
+      seen.add(w);
+      results.push(item);
+    }
+  } catch (err) {
+    offline = true;
+  }
+
+  if (reqId !== rhymeReqId) return;   // a newer search superseded this one
+
+  if (offline) {
+    const localWords = await findRhymesLocal(word);
+    if (reqId !== rhymeReqId) return;
+    results = localWords.map(w => ({ word: w }));
+  }
+
+  renderRhymeResults(word, results, offline);
+}
+
+function renderRhymeResults(word, results, offline) {
+  const label = document.getElementById('rhyme-label');
+  const swarm = document.getElementById('swarm');
+  rhymeMeta = {};
+  wordSourceMap = {};
+
+  if (!results || results.length === 0) {
+    swarm.innerHTML = '';
+    label.innerHTML = `no rhymes for “${word}”` +
+      (offline ? ' <span style="color:#666">(offline)</span>' : '') + closeBtn();
+    return;
+  }
+
+  results.forEach(it => {
+    if (it.numSyllables) rhymeMeta[it.word] = it.numSyllables;
+    if ((DICTS.standard || {})[it.word]) wordSourceMap[it.word] = 'standard';
+  });
+
+  const rng = mulberry32(dateSeed(word));   // stable cloud layout per seed word
+  renderWords(results.map(it => it.word), rng);
+  label.innerHTML = `${results.length} rhyme${results.length === 1 ? '' : 's'} for ` +
+    `<b style="color:#bbb">${word}</b>` +
+    (offline ? ' <span style="color:#666">· offline, perfect rhymes only</span>' : '') +
+    closeBtn();
+}
+
+async function loadRhymeIndex() {
+  if (rhymeIndex) return;
+  try {
+    const raw = await fetch('rhymes.json').then(r => r.json());
+    rhymeIndex = {};
+    rhymeKeyToWords = {};
+    for (const w in raw) {
+      const k = raw[w];
+      rhymeIndex[w.toLowerCase()] = k;
+      (rhymeKeyToWords[k] || (rhymeKeyToWords[k] = [])).push(w);
+    }
+  } catch (e) {
+    rhymeIndex = null;
+  }
+}
+
+async function findRhymesLocal(word) {
+  await loadRhymeIndex();
+  if (!rhymeIndex) return [];
+  const key = rhymeIndex[word];
+  if (!key) return [];
+  return (rhymeKeyToWords[key] || []).filter(w => w.toLowerCase() !== word);
+}
+
+const rhymeInput = document.getElementById('rhyme-input');
+let rhymeDebounce = null;
+rhymeInput.addEventListener('input', () => {
+  clearTimeout(rhymeDebounce);
+  rhymeDebounce = setTimeout(() => runRhymeSearch(rhymeInput.value), 300);
+});
+rhymeInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { clearTimeout(rhymeDebounce); runRhymeSearch(rhymeInput.value); }
+  else if (e.key === 'Escape') { e.preventDefault(); toggleRhymeMode(); }
+});
+
 
 // --- Keyboard ---
 document.addEventListener('keydown', (e) => {
@@ -927,12 +1138,14 @@ document.addEventListener('keydown', (e) => {
     if (infoOpen) { toggleInfo(); return; }
     if (dictMenuOpen) { toggleDictMenu(); return; }
     if (menuOpen) { toggleMenu(); return; }
+    if (rhymeMode) { toggleRhymeMode(); return; }
     hideTooltip();
     return;
   }
 
   if (key === 'a' || key === 'A') { toggleInfo(); return; }
   if (key === 'd' || key === 'D') { toggleDictMenu(); return; }
+  if (key === 'y' || key === 'Y') { toggleRhymeMode(); return; }
   if (key === 'f' || key === 'F' || key === '/') { e.preventDefault(); toggleMenu(); return; }
 
   if (dictMenuOpen) {

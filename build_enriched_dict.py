@@ -35,6 +35,20 @@ print(f"NRC emotion lexicon: {len(emotions_data)} words with at least one tag")
 
 # --- Load CMU Pronouncing Dictionary ---
 syllable_data = {}
+rhyme_key_data = {}
+
+def rhyming_part(phonemes):
+    """Phonemes from the last stressed vowel to the end, stress digits stripped.
+    Mirrors pronouncing.rhyming_part — two words share a perfect rhyme when equal.
+    e.g. ['F','AY1','ER0'] -> 'AYER'"""
+    last_stressed = None
+    for i, p in enumerate(phonemes):
+        if p[-1] in ('1', '2'):
+            last_stressed = i
+    if last_stressed is None:
+        return None
+    tail = phonemes[last_stressed:]
+    return ''.join(re.sub(r'\d', '', p) for p in tail)
 
 with open("data/cmudict.dict") as f:
     for line in f:
@@ -53,8 +67,12 @@ with open("data/cmudict.dict") as f:
         # Count syllables = number of phonemes with stress markers (digits)
         syllables = sum(1 for p in phonemes if p[-1].isdigit())
         syllable_data[word] = syllables
+        key = rhyming_part(phonemes)
+        if key:
+            rhyme_key_data[word] = key
 
 print(f"CMU dictionary: {len(syllable_data)} words with syllable counts")
+print(f"CMU dictionary: {len(rhyme_key_data)} words with rhyme keys")
 
 # --- Extract Part of Speech from definitions ---
 def extract_pos(definition):
@@ -165,3 +183,25 @@ with gzip.open("definitions.json.gz", "wb", compresslevel=9) as f:
     f.write(defs_json.encode())
 gz_size = os.path.getsize("definitions.json.gz")
 print(f"definitions.json.gz: {gz_size / 1024 / 1024:.1f} MB")
+
+# --- Build rhyme index (offline fallback for rhyming mode) ---
+# rhymes.json: { word: rhymeKey }, limited to words we can also display
+# (intersection of CMU rhyme keys and the original dictionary), so every
+# offline rhyme result is a real, definable word.
+rhyme_data = {}
+for word in orig_dict:
+    key = rhyme_key_data.get(word.lower())
+    if key:
+        rhyme_data[word] = key
+
+print(f"\nRhyme index: {len(rhyme_data)} words with rhyme keys")
+
+rhymes_json = json.dumps(rhyme_data, separators=(',', ':'))
+with open("rhymes.json", "w") as f:
+    f.write(rhymes_json)
+print(f"rhymes.json: {len(rhymes_json) / 1024 / 1024:.2f} MB")
+
+with gzip.open("rhymes.json.gz", "wb", compresslevel=9) as f:
+    f.write(rhymes_json.encode())
+gz_size = os.path.getsize("rhymes.json.gz")
+print(f"rhymes.json.gz: {gz_size / 1024 / 1024:.2f} MB")
