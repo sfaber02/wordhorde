@@ -1001,7 +1001,7 @@ function exitRhymeUI() {
   document.getElementById('rhyme-bar').classList.remove('visible');
 }
 
-function toggleRhymeMode() {
+function toggleRhymeMode(deferFocus) {
   if (rhymeMode) {
     rhymeReqId++;               // cancel any in-flight search
     exitRhymeUI();
@@ -1017,13 +1017,19 @@ function toggleRhymeMode() {
   document.getElementById('rhyme-bar').classList.add('visible');
   document.getElementById('rhyme-label').innerHTML = closeBtn();
   document.getElementById('rhyme-input').value = '';
-  showRhymeInput(true);
+  // When opened via the 'y' hotkey, defer focus past the keystroke so the
+  // triggering 'y' isn't typed into the input. Taps/clicks focus immediately
+  // (iOS only shows the keyboard when focus happens inside the gesture).
+  showRhymeInput(true, deferFocus);
 }
 
-function showRhymeInput(focus) {
+function showRhymeInput(focus, defer) {
   const input = document.getElementById('rhyme-input');
   input.style.display = '';
-  if (focus) { input.focus(); input.select(); }
+  if (!focus) return;
+  const doFocus = () => { input.focus(); input.select(); };
+  if (defer) requestAnimationFrame(doFocus);
+  else doFocus();
 }
 
 function hideRhymeInput() {
@@ -1164,7 +1170,7 @@ document.addEventListener('keydown', (e) => {
 
   if (key === 'a' || key === 'A') { toggleInfo(); return; }
   if (key === 'd' || key === 'D') { toggleDictMenu(); return; }
-  if (key === 'y' || key === 'Y') { e.preventDefault(); toggleRhymeMode(); return; }
+  if (key === 'y' || key === 'Y') { e.preventDefault(); toggleRhymeMode(true); return; }
   if (key === 'f' || key === 'F' || key === '/') { e.preventDefault(); toggleMenu(); return; }
 
   if (dictMenuOpen) {
