@@ -848,7 +848,6 @@ document.getElementById('swarm').addEventListener('click', (e) => {
   if (activeWordEl === el) { hideTooltip(); return; }
 
   activeWordEl = el;
-  ignoreMove = true;
 
   const sourceKey = wordSourceMap[word] || [...activeDicts][0] || 'standard';
   const config = DICT_CONFIGS.find(c => c.key === sourceKey) || DICT_CONFIGS[0];
@@ -891,12 +890,6 @@ document.getElementById('swarm').addEventListener('click', (e) => {
 
 document.addEventListener('click', (e) => {
   if (!e.target.closest('.word') && !e.target.closest('#tooltip')) hideTooltip();
-});
-
-let ignoreMove = false;
-document.addEventListener('mousemove', () => {
-  if (ignoreMove) { ignoreMove = false; return; }
-  if (activeWordEl) hideTooltip();
 });
 
 function positionTooltip(x, y) {
